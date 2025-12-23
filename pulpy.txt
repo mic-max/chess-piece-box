@@ -1,0 +1,36 @@
+from pulp import *
+
+# Sample cylinder data
+cylinders = [
+    {'x': 1, 'y': 2, 'z': 3, 'r': 0.5, 'h': 2},
+    {'x': 4, 'y': 5, 'z': 6, 'r': 0.6, 'h': 3}
+]
+
+# Define problem
+prob = LpProblem("BoundingBoxMin", LpMinimize)
+
+# Variables
+x_min = LpVariable("x_min")
+x_max = LpVariable("x_max")
+y_min = LpVariable("y_min")
+y_max = LpVariable("y_max")
+z_min = LpVariable("z_min")
+z_max = LpVariable("z_max")
+
+# Constraints for each cylinder
+for c in cylinders:
+    prob += x_min <= c['x'] - c['r']
+    prob += x_max >= c['x'] + c['r']
+    prob += y_min <= c['y'] - c['r']
+    prob += y_max >= c['y'] + c['r']
+    prob += z_min <= c['z'] - c['h']/2
+    prob += z_max >= c['z'] + c['h']/2
+
+# Objective: minimize bounding box perimeter (as a proxy for volume)
+prob += (x_max - x_min) + (y_max - y_min) + (z_max - z_min)
+
+# Solve
+prob.solve()
+print("x range:", value(x_min), "-", value(x_max))
+print("y range:", value(y_min), "-", value(y_max))
+print("z range:", value(z_min), "-", value(z_max))
